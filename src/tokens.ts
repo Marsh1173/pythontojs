@@ -1,19 +1,124 @@
-export type Token = OpenParen | CloseParen | String | Number | CallMethod;
+export type Token =
+  | NewLine
+  | Indent
+  | Dedent
+  | Identifier
+  | Keyword
+  | Literal
+  | Operator
+  | Delimiter;
 
-export interface OpenParen {
-  type: "OpenParen";
+export interface NewLine {
+  type: "NewLine";
 }
-export interface CloseParen {
-  type: "CloseParen";
+export interface Indent {
+  type: "Indent";
 }
-export interface CallMethod {
-  type: "CallMethod";
+export interface Dedent {
+  type: "Dedent";
 }
-export interface String {
-  type: "String";
-  value: string;
+export interface Identifier {
+  type: "Identifier";
+  name: string;
 }
-export interface Number {
-  type: "Number";
-  value: number;
+export interface Keyword {
+  type: "Keyword";
+  value:
+    | "False"
+    | "await"
+    | "else"
+    | "import"
+    | "pass"
+    | "None"
+    | "break"
+    | "except"
+    | "in"
+    | "raise"
+    | "True"
+    | "class"
+    | "finally"
+    | "is"
+    | "return"
+    | "and"
+    | "continue"
+    | "for"
+    | "lambda"
+    | "try"
+    | "as"
+    | "def"
+    | "from"
+    | "nonlocal"
+    | "while"
+    | "assert"
+    | "del"
+    | "global"
+    | "not"
+    | "with"
+    | "async"
+    | "elif"
+    | "if"
+    | "or"
+    | "yield";
+}
+
+export interface Literal {
+  type: "Literal";
+  value: { type: "String"; value: string } | { type: "Number"; value: number };
+}
+
+export interface Operator {
+  type: "Operator";
+  value:
+    | "+"
+    | "-"
+    | "*"
+    | "**"
+    | "/"
+    | "//"
+    | "%"
+    | "@"
+    | "<<"
+    | ">>"
+    | "&"
+    | "|"
+    | "^"
+    | "~"
+    | ":="
+    | "<"
+    | ">"
+    | "<="
+    | ">= "
+    | "=="
+    | "!=";
+}
+
+export interface Delimiter {
+  type: "Delimiter";
+  value:
+    | "("
+    | ")"
+    | "["
+    | "]"
+    | "{"
+    | "}"
+    | ","
+    | ":"
+    | "."
+    | ";"
+    | "@"
+    | "="
+    | "->"
+    | "+="
+    | "-="
+    | "*="
+    | "/="
+    | "//="
+    | "%="
+    | "@="
+    | "&="
+    | "|="
+    | "^="
+    | ">>="
+    | "<<="
+    | "**=";
 }
