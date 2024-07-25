@@ -1,15 +1,28 @@
-# pythontojs
+# Tokenizer
 
-To install dependencies:
+- Takes text and outputs a list of abstract syntax tokens
 
-```bash
-bun install
-```
+- Features:
+  - DONE Comments
+  - DONE Logical newlines
+  - DONE Physical newlines
+  - DONE Explicit and implicit line joining
+  - DONE Whitespace
+  - MOSTLY DONE Indentation
+  - DONE Identifiers + Keywords
+  - DONE Literals
+  - Operators
+  - Delimiters
 
-To run:
+Find out order or parsing operators or delimiters (including parentheses)
+Finish indentation
 
-```bash
-bun run index.ts
-```
+# Traverser
 
-This project was created using `bun init` in bun v1.1.3. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+- Takes a list of tokens and outputs an AST
+
+# Transformer
+
+# CodeGenerator
+
+# Compiler
