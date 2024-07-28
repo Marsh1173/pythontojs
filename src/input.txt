@@ -1,16 +1,41 @@
-# Declare a fruit list
-fruits = ["Mango", "Orange", "Guava", "Banana"]
+# Source + credit: https://www.geeksforgeeks.org/sierpinski-triangle/
+# Python 3 program to print
+# sierpinski triangle.
 
-# Insert an item in the 2nd position
-fruits.insert(1, "Grape")
+def printSierpinski(n):
+    
+    y = n - 1
+    while(y >= 0):
+        
+        # printing space till
+        # the value of y
+        i = 0
+        while(i < y):
+            print(" ", end="")
+            i = i + 1
+        
+        # printing '*'
+        x = 0
+        while(x + y < n):
+            
+            # printing '*' at the appropriate
+            # position is done by the and
+            # value of x and y wherever value
+            # is 0 we have printed '*'
+            if ((x & y) != 0): 
+                print(" ", end = " ")
+            else :
+                print("* ", end = "")
+            x = x + 1
+        
+        print()
+        y = y - 1
 
-# Displaying list after inserting
-print("The fruit list after insert:")
-print(fruits)
+# Driver code
+n = 32
 
-# Remove an item
-fruits.remove("Guava")
+# Function calling
+printSierpinski(n)
 
-# Print the list after delete
-print("The fruit list after delete:")
-print(fruits)
+
+# This code is contributed by Nikita Tiwari.

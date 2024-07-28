@@ -85,7 +85,7 @@ export type OperatorType =
   | "<"
   | ">"
   | "<="
-  | ">= "
+  | ">="
   | "=="
   | "!=";
 export const Operators: OperatorType[] = [
@@ -105,7 +105,7 @@ export const Operators: OperatorType[] = [
   "~",
   ":=",
   "<=",
-  ">= ",
+  ">=",
   "<",
   ">",
   "==",
@@ -145,12 +145,6 @@ export type DelimiterType =
   | "<<="
   | "**=";
 export const Delimiters: DelimiterType[] = [
-  "(",
-  ")",
-  "[",
-  "]",
-  "{",
-  "}",
   ",",
   ":",
   ".",

@@ -5,6 +5,7 @@ import { Delimiters, Operators, type DelimiterType, type OperatorType, type Toke
 const whitespace_chars = " \t";
 const identifier_matcher = /\d|[a-zA-Z]|_/;
 const numeric_matcher = /\d/;
+const parenthesis_matcher = /\(|\)|{|}|\[|\]/;
 
 export const get_tokens = async (): Promise<Token[]> => {
   const input_text: string = await Bun.file("./src/input.txt").text();
@@ -13,13 +14,13 @@ export const get_tokens = async (): Promise<Token[]> => {
   let index: number = 0;
   let newline_count: number = 1;
 
-  const paren_stack = "";
-  const indentation_stack = [0];
+  const paren_stack: string[] = [];
+  const indentation_stack: number[] = [0];
 
   while (index < input_text.length) {
     // handle indentation
     if (is_preceeded_by_newline(tokens)) {
-      [index] = handle_indentation(input_text, index);
+      index = handle_indentation(tokens, input_text, indentation_stack, index, newline_count);
     }
 
     const next_char = input_text.charAt(index);
@@ -47,6 +48,9 @@ export const get_tokens = async (): Promise<Token[]> => {
     } else if (identifier_matcher.test(next_char)) {
       // grab identifier token
       [index] = handle_identifier(input_text, tokens, index);
+    } else if (parenthesis_matcher.test(next_char)) {
+      // grab identifier token
+      index = handle_parenthesis(input_text, paren_stack, tokens, index, newline_count);
     } else {
       let delimiter_str: DelimiterType | undefined = Delimiters.find((str) =>
         input_text.startsWith(str, index)
@@ -83,6 +87,12 @@ export const get_tokens = async (): Promise<Token[]> => {
       }
     }
   }
+
+  indentation_stack.forEach((_) => {
+    tokens.push({
+      type: "Dedent",
+    });
+  });
 
   return tokens;
 };
@@ -132,9 +142,9 @@ function handle_backslash(
 }
 
 /**
- *
+ * Handles identifying logical vs physical newlines. Identifies indents and dedents and returns the index following the indents.
  */
-function handle_newline(tokens: Token[], paren_stack: string) {
+function handle_newline(tokens: Token[], paren_stack: string[]) {
   // identify logical new lines (not physical new lines)
   // anything in braces, parentheses, and square brackets can be separated onto physical new lines without defining the end of a logical new line
   const is_outside_of_parens = paren_stack.length === 0;
@@ -150,9 +160,15 @@ function handle_newline(tokens: Token[], paren_stack: string) {
  *
  * returns [new index]
  */
-function handle_indentation(input_text: string, index: number): [number] {
+function handle_indentation(
+  tokens: Token[],
+  input_text: string,
+  indentation_stack: number[],
+  index: number,
+  newline_count: number
+): number {
   let indentation = 0;
-  while (whitespace_chars.includes(input_text.charAt(index))) {
+  while (index < input_text.length && whitespace_chars.includes(input_text.charAt(index))) {
     if (input_text.charAt(index) === " ") {
       indentation++;
     } else if (input_text.charAt(index) === "\t") {
@@ -161,8 +177,40 @@ function handle_indentation(input_text: string, index: number): [number] {
     index++;
   }
 
+  if (index < input_text.length && input_text.charAt(index) !== "\n") {
+    const tokens_to_commit: Token[] = [];
+    // console.log(indentation_stack);
+    // console.log(indentation);
+    // console.log(newline_count);
+    const prev_indentation = indentation_stack[indentation_stack.length - 1];
+    if (indentation > prev_indentation) {
+      indentation_stack.push(indentation);
+      tokens_to_commit.push({
+        type: "Indent",
+      });
+    } else if (indentation < prev_indentation) {
+      let prev = indentation_stack.pop();
+      while (true) {
+        if (prev === undefined) {
+          throw new Error("Indentation error occured on line " + newline_count);
+        } else if (indentation > prev) {
+          throw new Error("Invalid indentation on line " + newline_count);
+        } else if (indentation < prev) {
+          prev = indentation_stack.pop();
+          tokens_to_commit.push({
+            type: "Dedent",
+          });
+        } else if (indentation === prev) {
+          indentation_stack.push(indentation);
+          break;
+        }
+      }
+    }
+    tokens.push(...tokens_to_commit);
+  }
+
   // Once all characters result in an error or token, use indentation stack to add indents or dedents
-  return [index];
+  return index;
 }
 
 /**
@@ -182,6 +230,53 @@ function handle_identifier(input_text: string, tokens: Token[], index: number): 
     name: identifier_string,
   });
   return [index];
+}
+
+/**
+ * Detects parentheses and pushes a token to the list and the value to the stack.
+ * Returns first index after keyword / identifier
+ *
+ * returns new index
+ */
+function handle_parenthesis(
+  input_text: string,
+  paren_stack: string[],
+  tokens: Token[],
+  index: number,
+  newline_count: number
+): number {
+  const char: DelimiterType = input_text.charAt(index) as "(" | ")" | "{" | "}" | "[" | "]";
+
+  if (char === "(" || char === "{" || char === "[") {
+    paren_stack.push(char);
+  } else {
+    const popped = paren_stack.pop();
+    let popped_reverse = undefined;
+
+    switch (popped) {
+      case "(":
+        popped_reverse = ")";
+        break;
+      case "{":
+        popped_reverse = "}";
+        break;
+      case "[":
+        popped_reverse = "]";
+        break;
+    }
+
+    if (popped_reverse === undefined || popped_reverse !== char) {
+      throw new Error(
+        "Mismatched parenthesis on line " + newline_count + ", did you mean " + popped_reverse + ""
+      );
+    }
+  }
+
+  tokens.push({
+    type: "Delimiter",
+    value: char as DelimiterType,
+  });
+  return index + 1;
 }
 
 /**
@@ -274,20 +369,26 @@ function grab_numeric_token(tokens: Token[], index: number, input_text: string):
     } else if (numeric_matcher.test(char)) {
       str += char;
     } else {
-      index++;
       break;
     }
 
     index++;
   }
 
-  tokens.push({
-    type: "Literal",
-    value: {
-      type: "Number",
-      value: Number(str),
-    },
-  });
+  if (str === "-") {
+    tokens.push({
+      type: "Operator",
+      value: "-",
+    });
+  } else {
+    tokens.push({
+      type: "Literal",
+      value: {
+        type: "Number",
+        value: Number(str),
+      },
+    });
+  }
 
   return index;
 }

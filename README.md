@@ -26,3 +26,8 @@ Finish indentation
 # CodeGenerator
 
 # Compiler
+
+https://github.com/jamiebuilds/the-super-tiny-compiler/blob/master/the-super-tiny-compiler.js#L79
+https://www.diffchecker.com/
+https://regex101.com/
+https://docs.python.org/3/reference/lexical_analysis.html#indentation
